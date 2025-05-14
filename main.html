@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soneium - Yoki Legacy Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            max-width: 100%;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th:first-child, td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: #f2f2f2;
+            z-index: 5;
+        }
+
+        .address-cell {
+            cursor: pointer;
+            color: #0066cc;
+        }
+
+        .address-cell:hover {
+            text-decoration: underline;
+        }
+
+        .nft-img, .astr-img {
+            width: 32px;
+            height: 32px;
+            vertical-align: middle;
+        }
+
+        .yoki-green {
+            background-color: #e6ffe6; /* 淡綠色 */
+        }
+
+        .yoki-red {
+            background-color: #ffe6e6; /* 淡紅色 */
+        }
+
+        .status-green {
+            background-color: #e6ffe6; /* 淡綠色 for Badge */
+        }
+
+        .button-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Soneium - Yoki Legacy Dashboard</h1>
+    <div class="button-container">
+        <input type="file" id="csvFileInput" accept=".csv" />
+        <button onclick="downloadSampleCSV()">下載導入範例</button>
+        <button onclick="fetchData()">查詢數據</button>
+        <button onclick="exportTableToCSV('yoki_data.csv')">導出表格</button>
+    </div>
+    <div id="error" class="error"></div>
+    <div class="table-container">
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th rowspan="3">Address</th>
+                    <th colspan="1">ASTR</th>
+                    <th colspan="1">OMASTR</th>
+                    <th colspan="1">Badge</th>
+                    <th colspan="3">Need Capsule</th>
+                    <th colspan="12">Capsule</th>
+                    <th colspan="12">Yoki</th>
+                    <th colspan="12">Fused Yoki</th>
+                </tr>
+                <tr>
+                    <th>ASTR</th>
+                    <th>OMASTR</th>
+                    <th>Badge</th>
+                    <th>A</th>
+                    <th>B</th>
+                    <th>C</th>
+                    <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                    <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                    <th>11</th><th>12</th>
+                    <th>100</th><th>200</th><th>300</th><th>400</th><th>500</th>
+                    <th>600</th><th>700</th><th>800</th><th>900</th><th>1000</th>
+                    <th>1100</th><th>1200</th>
+                    <th>101</th><th>201</th><th>301</th><th>401</th><th>501</th>
+                    <th>601</th><th>701</th><th>801</th><th>901</th><th>1001</th>
+                    <th>1101</th><th>1201</th>
+                </tr>
+                <tr>
+                    <th><img src="./image/astar-logo.svg" class="astr-img" alt="ASTR Logo" onerror="this.parentElement.textContent='ASTR'"></th>
+                    <th><img src="./image/0.webp" class="nft-img" alt="OMASTR Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th></th> <!-- Badge -->
+                    <th></th> <!-- A -->
+                    <th></th> <!-- B -->
+                    <th></th> <!-- C -->
+                    <th><img src="./image/1.webp" class="nft-img" alt="Capsule 1 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/2.webp" class="nft-img" alt="Capsule 2 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/3.webp" class="nft-img" alt="Capsule 3 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/4.webp" class="nft-img" alt="Capsule 4 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/5.webp" class="nft-img" alt="Capsule 5 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/6.webp" class="nft-img" alt="Capsule 6 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/7.webp" class="nft-img" alt="Capsule 7 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/8.webp" class="nft-img" alt="Capsule 8 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/9.webp" class="nft-img" alt="Capsule 9 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/10.webp" class="nft-img" alt="Capsule 10 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/11.webp" class="nft-img" alt="Capsule 11 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/12.webp" class="nft-img" alt="Capsule 12 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/100.webp" class="nft-img" alt="Yoki 100 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/200.webp" class="nft-img" alt="Yoki 200 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/300.webp" class="nft-img" alt="Yoki 300 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/400.webp" class="nft-img" alt="Yoki 400 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/500.webp" class="nft-img" alt="Yoki 500 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/600.webp" class="nft-img" alt="Yoki 600 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/700.webp" class="nft-img" alt="Yoki 700 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/800.webp" class="nft-img" alt="Yoki 800 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/900.webp" class="nft-img" alt="Yoki 900 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/1000.webp" class="nft-img" alt="Yoki 1000 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/1100.webp" class="nft-img" alt="Yoki 1100 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/1200.webp" class="nft-img" alt="Yoki 1200 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/101.webp" class="nft-img" alt="Fused Yoki 101 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/201.webp" class="nft-img" alt="Fused Yoki 201 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/301.webp" class="nft-img" alt="Fused Yoki 301 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/401.webp" class="nft-img" alt="Fused Yoki 401 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/501.webp" class="nft-img" alt="Fused Yoki 501 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/601.webp" class="nft-img" alt="Fused Yoki 601 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/701.webp" class="nft-img" alt="Fused Yoki 701 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/801.webp" class="nft-img" alt="Fused Yoki 801 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/901.webp" class="nft-img" alt="Fused Yoki 901 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/1001.webp" class="nft-img" alt="Fused Yoki 1001 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/1101.webp" class="nft-img" alt="Fused Yoki 1101 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                    <th><img src="./image/1201.webp" class="nft-img" alt="Fused Yoki 1201 Image" onerror="this.parentElement.textContent='No Image'"></th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const targetERC20Address = "0x2CAE934a1e84F693fbb78CA5ED3B0A6893259441"; // ASTR
+        const targetERC1155Address = "0x80E041b16a38f4caa1d0137565B37FD71b2f1E2b"; // Yoki Legacy
+        const targetTokenIds = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+            100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200,
+            101, 201, 301, 401, 501, 601, 701, 801, 901, 1001, 1101, 1201
+        ];
+        const yokiIds = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200];
+        const fusedYokiIds = [101, 201, 301, 401, 501, 601, 701, 801, 901, 1001, 1101, 1201];
+        const needCapsuleGroups = {
+            A: [
+                [1, 100, 101], [2, 200, 201], [3, 300, 301], [4, 400, 401]
+            ],
+            B: [
+                [5, 500, 501], [6, 600, 601], [7, 700, 701], [8, 800, 801]
+            ],
+            C: [
+                [9, 900, 901], [10, 1000, 1001], [11, 1100, 1101], [12, 1200, 1201]
+            ]
+        };
+        let addresses = [];
+
+        // 處理CSV檔案導入
+        document.getElementById('csvFileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            Papa.parse(file, {
+                header: true,
+                complete: function(results) {
+                    const requiredFields = ["address"];
+                    const errors = results.data.filter(row => 
+                        !requiredFields.every(field => row[field] && row[field].trim())
+                    );
+                    if (errors.length > 0) {
+                        document.getElementById('error').textContent = "CSV檔案格式錯誤：缺少地址欄位";
+                        document.getElementById('error').style.display = "block";
+                        return;
+                    }
+                    addresses = results.data.map(row => row.address.trim().toLowerCase());
+                    document.getElementById('error').style.display = "none";
+                    populateTable();
+                },
+                error: function(error) {
+                    document.getElementById('error').textContent = "解析CSV檔案失敗：" + error.message;
+                    document.getElementById('error').style.display = "block";
+                }
+            });
+        });
+
+        // 下載範例CSV
+        function downloadSampleCSV() {
+            const sampleData = [
+                ["address"],
+                ["0x1234567890abcdef1234567890abcdef12345678"]
+            ];
+            const csv = sampleData.map(row => row.join(",")).join("\n");
+            const csvFile = new Blob([csv], { type: "text/csv" });
+            const downloadLink = document.createElement("a");
+            downloadLink.download = "sample_import.csv";
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        // 初始化表格
+        function populateTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            addresses.forEach(address => {
+                const row = document.createElement('tr');
+                
+                // 地址欄
+                const addressCell = document.createElement('td');
+                addressCell.className = 'address-cell';
+                addressCell.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
+                addressCell.title = "點擊複製完整地址";
+                addressCell.onclick = () => {
+                    navigator.clipboard.writeText(address).then(() => {
+                        alert("已複製地址：" + address);
+                    });
+                };
+                row.appendChild(addressCell);
+
+                // 其他欄位（ASTR, OMASTR, Badge, A, B, C, Capsule, Yoki, Fused Yoki）
+                for (let i = 0; i < 42; i++) {
+                    const cell = document.createElement('td');
+                    cell.textContent = 'N/A';
+                    row.appendChild(cell);
+                }
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 查詢ERC-20數據
+        async function fetchERC20Data(walletAddress) {
+            const url = `https://soneium.blockscout.com/api/v2/addresses/${walletAddress}/tokens?type=ERC-20`;
+            try {
+                const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const astrToken = data.items.find(item => item.token.address.toLowerCase() === targetERC20Address.toLowerCase());
+                if (astrToken) {
+                    const value = parseInt(astrToken.value) / 10 ** 18;
+                    return value.toFixed(2);
+                }
+                return "0.00";
+            } catch (error) {
+                console.error(`獲取 ${walletAddress} 的ERC-20數據失敗:`, error);
+                return "Error";
+            }
+        }
+
+        // 查詢ERC-1155數據
+        async function fetchERC1155Data(walletAddress) {
+            const url = `https://soneium.blockscout.com/api/v2/addresses/${walletAddress}/tokens?type=ERC-1155`;
+            try {
+                const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const result = {};
+                targetTokenIds.forEach(id => {
+                    result[id] = "0";
+                });
+                data.items.forEach(item => {
+                    if (item.token.address.toLowerCase() === targetERC1155Address.toLowerCase()) {
+                        const tokenId = parseInt(item.token_id);
+                        if (targetTokenIds.includes(tokenId)) {
+                            result[tokenId] = item.value;
+                        }
+                    }
+                });
+                return result;
+            } catch (error) {
+                console.error(`獲取 ${walletAddress} 的ERC-1155數據失敗:`, error);
+                return null;
+            }
+        }
+
+        // 計算Need Capsule值（A, B, C）
+        function calculateNeedCapsuleValue(nftData, groups) {
+            let total = 0;
+            groups.forEach(([capsuleId, yokiId, fusedYokiId]) => {
+                const capsule = parseInt(nftData[capsuleId]) || 0;
+                const yoki = parseInt(nftData[yokiId]) || 0;
+                const fusedYoki = parseInt(nftData[fusedYokiId]) || 0;
+                const groupValue = capsule + yoki + fusedYoki * 3;
+                total += Math.min(groupValue, 4);
+            });
+            return 16 - total;
+        }
+
+        // 查詢所有數據
+        async function fetchData() {
+            if (addresses.length === 0) {
+                document.getElementById('error').textContent = "請先導入地址";
+                document.getElementById('error').style.display = "block";
+                return;
+            }
+
+            const errorDiv = document.getElementById("error");
+            const tableBody = document.getElementById("tableBody");
+
+            errorDiv.style.display = "none";
+
+            const batchSize = 10;
+            for (let i = 0; i < addresses.length; i += batchSize) {
+                const batch = addresses.slice(i, i + batchSize);
+                const fetchPromises = batch.map(async (address, index) => {
+                    const rowIndex = i + index;
+                    const row = tableBody.rows[rowIndex];
+
+                    const [astrValue, nftData] = await Promise.all([
+                        fetchERC20Data(address),
+                        fetchERC1155Data(address)
+                    ]);
+
+                    if (astrValue === "Error" || !nftData) {
+                        row.cells[1].textContent = "Error";
+                        for (let j = 2; j < row.cells.length; j++) {
+                            row.cells[j].textContent = "N/A";
+                        }
+                    } else {
+                        // ASTR
+                        row.cells[1].textContent = astrValue;
+
+                        // OMASTR
+                        row.cells[2].textContent = nftData[0];
+
+                        // Badge
+                        const yokiValues = yokiIds.map(id => parseInt(nftData[id]) || 0);
+                        const fusedYokiValues = fusedYokiIds.map(id => parseInt(nftData[id]) || 0);
+                        const allValid = yokiValues.every(val => val >= 1) && fusedYokiValues.every(val => val >= 1);
+                        row.cells[3].textContent = allValid ? '✅' : '❌';
+                        row.cells[3].className = allValid ? 'status-green' : '';
+
+                        // Need Capsule: A, B, C
+                        row.cells[4].textContent = calculateNeedCapsuleValue(nftData, needCapsuleGroups.A);
+                        row.cells[5].textContent = calculateNeedCapsuleValue(nftData, needCapsuleGroups.B);
+                        row.cells[6].textContent = calculateNeedCapsuleValue(nftData, needCapsuleGroups.C);
+
+                        // Capsule, Yoki, Fused Yoki
+                        targetTokenIds.slice(1).forEach((id, idx) => {
+                            row.cells[idx + 7].textContent = nftData[id];
+                        });
+
+                        // Yoki 欄位底色
+                        const yokiAllValid = yokiValues.every(val => val >= 1);
+                        yokiIds.forEach(id => {
+                            const idx = targetTokenIds.indexOf(id);
+                            row.cells[idx + 6].className = yokiAllValid ? 'yoki-green' : 'yoki-red';
+                        });
+
+                        // Fused Yoki 欄位底色
+                        const fusedYokiAllValid = fusedYokiValues.every(val => val >= 1);
+                        fusedYokiIds.forEach(id => {
+                            const idx = targetTokenIds.indexOf(id);
+                            row.cells[idx + 6].className = fusedYokiAllValid ? 'yoki-green' : 'yoki-red';
+                        });
+                    }
+                });
+
+                await Promise.all(fetchPromises);
+            }
+        }
+
+        // 導出表格為CSV
+        function exportTableToCSV(filename) {
+            const csv = [];
+            const headers = [
+                "Address", "ASTR", "OMASTR", "Badge", "CapsuleA", "CapsuleB", "CapsuleC",
+                ...targetTokenIds.slice(1, 13).map(id => `Capsule_${id}`),
+                ...targetTokenIds.slice(13, 25).map(id => `Yoki_${id}`),
+                ...targetTokenIds.slice(25).map(id => `Fused_Yoki_${id}`)
+            ];
+            csv.push(headers.join(","));
+
+            const rows = document.querySelectorAll("#tableBody tr");
+            rows.forEach((row, index) => {
+                const cells = [addresses[index]];
+                for (let i = 1; i < row.cells.length; i++) {
+                    cells.push(row.cells[i].textContent);
+                }
+                csv.push(cells.join(","));
+            });
+
+            const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+            const downloadLink = document.createElement("a");
+            downloadLink.download = filename;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    </script>
+</body>
+</html>
